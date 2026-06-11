@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设备控制面板 - Sensor 001</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #2c3e50);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #fff;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 1000px;
+            width: 100%;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .header {
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #ff9a9e, #fad0c4);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: 700;
+        }
+        
+        .header .device-id {
+            font-size: 1.1em;
+            color: #a0d2ff;
+            margin-bottom: 15px;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #4CAF50;
+            margin-right: 8px;
+        }
+        
+        .status-text {
+            font-size: 0.9em;
+            color: #a0d2ff;
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .actuator-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 15px;
+            padding: 25px 20px;
+            color: white;
+            font-size: 1.3em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            min-height: 100px;
+        }
+        
+        .actuator-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .actuator-btn:active {
+            transform: translateY(1px);
+        }
+        
+        .actuator-btn.on {
+            background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+            box-shadow: 0 0 20px rgba(255, 65, 108, 0.5);
+        }
+        
+        .actuator-btn.off {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            box-shadow: 0 0 20px rgba(17, 153, 142, 0.5);
+        }
+        
+        .btn-label {
+            margin-top: 10px;
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        .status-section {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            margin-top: 20px;
+        }
+        
+        .status-title {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            color: #a0d2ff;
+            text-align: center;
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        
+        .status-item {
+            text-align: center;
+            padding: 10px;
+        }
+        
+        .status-value {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #fff;
+            margin-top: 5px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2em;
+            color: #a0d2ff;
+        }
+        
+        .error {
+            background: rgba(255, 100, 100, 0.2);
+            border: 1px solid #ff6b6b;
+            color: #ff6b6b;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            text-align: center;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .actuator-btn {
+                min-height: 120px;
+                padding: 20px;
+                font-size: 1.1em;
+            }
+            
+            .controls {
+				grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+			body{
+				padding: 10px;
+			}
+			.status-grid{
+				grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+			}
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>设备控制面板</h1>
+            <div class="device-id">设备ID: sensor_001</div>
+            <div class="status-indicator" id="connection-status"></div>
+            <span class="status-text" id="status-text">正在连接...</span>
+        </div>
+        
+        <div class="status-section">
+            <div class="status-title">设备实时状态</div>
+            <div class="status-grid">
+                <div class="status-item">
+                    <div>空气温度</div>
+                    <div class="status-value" id="temp-value">--</div>
+                </div>
+                <div class="status-item">
+                    <div>空气湿度</div>
+                    <div class="status-value" id="humidity-value">--</div>
+                </div>
+                <div class="status-item">
+                    <div>在线时长</div>
+                    <div class="status-value" id="uptime-value">--</div>
+                </div>
+                <div class="status-item">
+                    <div>最后心跳</div>
+                    <div class="status-value" id="heartbeat-value">--</div>
+                </div>
+            </div>
+        </div>
+		
+        <div class="controls">
+            <button class="actuator-btn off" id="actuator-27" onclick="toggleActuator(27)">
+                LED
+                <span class="btn-label">点击控制</span>
+            </button>
+            <button class="actuator-btn off" id="actuator-16" onclick="toggleActuator(16)">
+                强灯光
+                <span class="btn-label">点击控制</span>
+            </button>
+            <button class="actuator-btn off" id="actuator-23" onclick="toggleActuator(23)">
+                风扇
+                <span class="btn-label">点击控制</span>
+            </button>
+            <button class="actuator-btn off" id="actuator-25" onclick="toggleActuator(25)">
+                蜂鸣器
+                <span class="btn-label">点击控制</span>
+            </button>
+        </div>
+        
+    </div>
+
+    <script>
+        // 设备ID
+        const deviceId = 'sensor_001';
+        // API基础URL
+        const baseUrl = '/api';
+        const reqTime = 1000;
+        setInterval(getCacheIO_state,reqTime);
+		
+        // 设备状态
+        let deviceStatus = {
+            actuators: {},
+            sensors: {
+                temperature: '--',
+                humidity: '--'
+            },
+            uptime: 0,
+            lastHeartbeat: 0,
+            connected: false
+        };
+        
+        // 初始化页面
+        function initPage() {
+            updateConnectionStatus(false, '正在连接...');
+            fetchDeviceStatus();
+			getCacheIO_state();
+            setInterval(fetchDeviceStatus, reqTime);
+        }
+        
+        // 获取设备状态
+        async function fetchDeviceStatus() {
+            try {
+                const response = await fetch(`${baseUrl}/devices/${deviceId}`);
+                if (!response.ok) {
+                    throw new Error('设备未找到或未连接');
+                }
+                
+                const data = await response.json();
+                if (data.success) {
+                    updateDeviceStatus(data);
+                    updateConnectionStatus(true, '设备在线');
+                } else {
+                    updateConnectionStatus(false, '设备离线');
+                }
+            } catch (error) {
+                console.error('获取设备状态失败:', error);
+                updateConnectionStatus(false, '连接失败');
+            }
+        }
+        
+        // 更新设备状态
+        function updateDeviceStatus(data) {
+            deviceStatus.connected = true;
+            deviceStatus.uptime = data.uptime || 0;
+            deviceStatus.lastHeartbeat = data.lastHeartbeat || 0;
+            
+            // 更新传感器数据
+            if (data.data) {
+                if (data.data.temperature !== undefined) {
+                    deviceStatus.sensors.temperature = data.data.temperature;
+                    document.getElementById('temp-value').textContent = `${deviceStatus.sensors.temperature}°C`;
+                }
+                
+                if (data.data.humidity !== undefined) {
+                    deviceStatus.sensors.humidity = data.data.humidity;
+                    document.getElementById('humidity-value').textContent = `${deviceStatus.sensors.humidity}%`;
+                }
+                
+                // 更新执行器状态
+                if (data.data.actuators) {
+                    for (let i = 1; i <= 4; i++) {
+                        const actuatorKey = `actuator_${i}`;
+                        if (data.data.actuators[actuatorKey] !== undefined) {
+                            deviceStatus.actuators[i] = data.data.actuators[actuatorKey];
+                            updateActuatorButton(i, deviceStatus.actuators[i]);
+                        }
+                    }
+                }
+            }
+            
+            // 更新在线时长
+            document.getElementById('uptime-value').textContent = formatTime(deviceStatus.uptime);
+            
+            // 更新最后心跳时间
+            let timeSinceLastHeartbeat = Math.floor((Date.now() - deviceStatus.lastHeartbeat) / 1000);
+			timeSinceLastHeartbeat<0&&(timeSinceLastHeartbeat=0);
+            document.getElementById('heartbeat-value').textContent = `${timeSinceLastHeartbeat}s`;
+        }
+        
+        // 更新连接状态显示
+        function updateConnectionStatus(connected, message) {
+            const statusIndicator = document.getElementById('connection-status');
+            const statusText = document.getElementById('status-text');
+            
+            if (connected) {
+                statusIndicator.style.background = '#4CAF50';
+                statusText.textContent = '设备在线';
+            } else {
+                statusIndicator.style.background = '#ff6b6b';
+                statusText.textContent = message;
+            }
+        }
+        
+        // 更新执行器按钮状态
+        function updateActuatorButton(actuatorId, isOn) {
+			actuatorId==25&&(isOn=!isOn);
+            const button = document.getElementById(`actuator-${actuatorId}`);
+            if (button) {
+                button.className = `actuator-btn ${isOn ? 'on' : 'off'}`;
+				button.querySelector('span').innerHTML=isOn ? '运行中' : '空闲';
+            }
+        }
+        
+        // 获取服务器缓存的io状态
+        async function getCacheIO_state() {
+            try {
+                const response = await fetch(`${baseUrl}/devices/${deviceId}/io_state`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    // 更新本地状态
+					let obj=result.data;
+					for(let key in obj){ let s=obj[key];
+						updateActuatorButton(key, s);
+						deviceStatus.actuators[key]=s;
+					}
+                } else {
+                    // alert(`控制失败: ${result.error || '未知错误'}`);
+                }
+            } catch (error) {
+                console.error('失败:', error);
+            }
+        }
+        
+        // 切换执行器状态
+        async function toggleActuator(actuatorId) {
+            if (!deviceStatus.connected) {
+                alert('设备未连接，请稍后再试');
+                return;
+            }
+            
+            const state = deviceStatus.actuators[actuatorId] ? 0:1;
+            const actuatorName = `actuator_${actuatorId}`;
+            
+            try {
+                const response = await fetch(`${baseUrl}/devices/${deviceId}/command`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        command: 'io',
+                        data: {
+                            i:actuatorId,
+							s:state,
+                        }
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    // 更新本地状态
+                    deviceStatus.actuators[actuatorId] = state;
+                    // updateActuatorButton(actuatorId, deviceStatus.actuators[actuatorId]);
+					getCacheIO_state();
+                } else {
+                    alert(`控制失败: ${result.error || '未知错误'}`);
+                }
+            } catch (error) {
+                console.error('发送命令失败:', error);
+                alert('发送控制命令失败，请检查网络连接');
+            }
+        }
+        
+        // 格式化时间
+        function formatTime(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            
+            return `${hours}h ${minutes}m ${secs}s`;
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', initPage);
+    </script>
+</body>
+</html>
